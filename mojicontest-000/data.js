@@ -22,10 +22,7 @@
 // author: 作成者名（答え合わせ用。予想期間は書かない）
 // ============================================================
 window.SITE_DATA = {
-phase: "answer",
+phase: "guess",
 entries: [
-{ no: 1, title: "扇", type: "image", media: "assets/001.png", author: "スコルピ"},
-{ no: 2, title: "怨み", type: "image", media: "assets/002.png", author: "セレアウト"},
-{ no: 3, title: "機器", type: "image", media: "assets/003.png", author: "ルッテジア"}
 ]
 };
