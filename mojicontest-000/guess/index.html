@@ -14,7 +14,7 @@
   :root{
     --bg:#12100d; --surface:#1c1a16; --surface-2:#2a2721;
     --ink:#f5f2ea; --muted:#a79d8d; --line:#35302a;
-    --accent:#e85a33; --accent-soft:#3d2118; --accent-ink:#ffffff;
+    --accent:#f5f2ea; --accent-soft:#2e2a24; --accent-ink:#12100d;
     --media-bg:#26231e;
     --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px rgba(0,0,0,.45);
     --cols:3;
@@ -32,7 +32,7 @@
   a{color:var(--accent)}
   .wrap{max-width:1440px;margin:0 auto;padding:0 16px 64px}
   /* ---- 見出し ---- */
-  .intro{padding:30px 0 6px;background:radial-gradient(640px 230px at 12% 0, rgba(232,90,51,.16), rgba(232,90,51,0) 70%)}
+  .intro{padding:30px 0 6px;background:radial-gradient(640px 230px at 12% 0, rgba(245,242,234,.09), rgba(245,242,234,0) 70%)}
   .intro h1{
     font-weight:900;font-size:clamp(26px,4.5vw,38px);
     letter-spacing:.04em;margin:0 0 8px;line-height:1.35;
@@ -540,13 +540,13 @@ async function generateExport() {
     } catch (err) {
       ctx.fillStyle = "#26231e"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
     }
-    ctx.fillStyle = "#e85a33"; ctx.font = "900 24px 'GenZenGothicKai',sans-serif";
+    ctx.fillStyle = "#f5f2ea"; ctx.font = "900 24px 'GenZenGothicKai',sans-serif";
     ctx.fillText("No." + pad(e.no), cx + 14, cy + IMG_H + 10);
     ctx.fillStyle = "#f5f2ea"; ctx.font = "900 34px 'GenZenGothicKai','Noto Sans JP',sans-serif";
     ctx.fillText(e.title, cx + 14, cy + IMG_H + 40);
     const g = guessOf(e.no).guess.trim();
     ctx.font = "26px 'GenZenGothicKai','Noto Sans JP',sans-serif";
-    ctx.fillStyle = g ? "#e85a33" : "#a79d8d";
+    ctx.fillStyle = g ? "#f5f2ea" : "#a79d8d";
     ctx.fillText("予想：" + (g || "（未入力）"), cx + 14, cy + IMG_H + 82);
   }
   canvas.toBlob((blob) => {
