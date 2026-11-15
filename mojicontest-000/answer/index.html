@@ -5,107 +5,252 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>諱文字コンテスト</title>
 <style>
+  @font-face{
+    font-family:"GenZenGothicKai";
+    src:url("../../assets/fonts/GenZenGothicKai.ttf") format("truetype");
+    font-weight:400 900;
+    font-display:swap;
+  }
   :root{
-    --bg:#101216; --surface:#1a1d24; --surface2:#22262f; --text:#e8eaf0;
-    --muted:#9aa1af; --border:#2c3038; --accent:#c9a86a; --focus:#6ea8fe;
+    --bg:#f4f3ef; --surface:#ffffff; --surface-2:#eceae3;
+    --ink:#1d1a16; --muted:#6e675c; --line:#ddd8cc;
+    --accent:#a62b12; --accent-soft:#fbe9e2; --accent-ink:#ffffff;
+    --media-bg:#e9e6dd;
+    --shadow:0 1px 2px rgba(29,26,22,.06), 0 8px 24px rgba(29,26,22,.06);
     --cols:3;
   }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16140f; --surface:#201d18; --surface-2:#2a2721;
+      --ink:#f1ede3; --muted:#a79d8d; --line:#3a362d;
+      --accent:#e85a33; --accent-soft:#3d2118; --media-bg:#292620;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
   *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);
-    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
-    -webkit-text-size-adjust:100%}
-  header{max-width:1200px;margin:0 auto;padding:28px 16px 8px}
-  h1{font-size:1.6rem;margin:0 0 8px;letter-spacing:.02em}
-  header p{margin:0;color:var(--muted);line-height:1.7;font-size:.95rem}
-  .controls{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;
-    flex-wrap:wrap;gap:10px;align-items:center}
-  .controls label{font-size:.85rem;color:var(--muted);display:flex;gap:6px;align-items:center}
-  .controls input[type="search"],.controls select,.controls button,
-  .field input,.field textarea{
-    background:var(--surface2);color:var(--text);border:1px solid var(--border);
-    border-radius:8px;padding:8px 10px;font-size:.95rem;font-family:inherit}
-  .controls input[type="search"]{min-width:180px}
-  .controls button{cursor:pointer}
-  .controls button.primary{background:var(--accent);border-color:var(--accent);
-    color:#17181c;font-weight:700}
-  #progress{font-size:.9rem;color:var(--muted)}
-  main{max-width:1200px;margin:0 auto;padding:4px 16px 40px}
-  #grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px}
-  .card{background:var(--surface);border:1px solid var(--border);
-    border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
-  .card .thumb{position:relative;cursor:zoom-in;background:#000}
-  .card .thumb img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
-  .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);
-    color:#fff;font-size:.75rem;padding:3px 8px;border-radius:999px}
-  .card .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
-  .no{font-size:.8rem;color:var(--muted)}
-  .work-title{font-size:1.35rem;font-weight:700;line-height:1.3}
-  .author{font-size:1rem;font-weight:600;color:var(--accent)}
-  .field{display:flex;flex-direction:column;gap:4px}
-  .field span{font-size:.78rem;color:var(--muted)}
-  .field input,.field textarea{width:100%}
-  .field textarea{resize:vertical;min-height:2.4em}
+  [hidden]{display:none !important}
+  html{-webkit-text-size-adjust:100%}
+  body{
+    margin:0;background:var(--bg);color:var(--ink);
+    font-family:"GenZenGothicKai","Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif;
+    font-size:15px;line-height:1.6;
+  }
+  button,input,select,textarea{font:inherit;color:inherit}
+  button,select,input{min-height:2.25rem}
+  a{color:var(--accent)}
+  .wrap{max-width:1440px;margin:0 auto;padding:0 16px 64px}
+  /* ---- 見出し ---- */
+  .intro{padding:30px 0 6px}
+  .intro h1{
+    font-weight:900;font-size:clamp(26px,4.5vw,38px);
+    letter-spacing:.04em;margin:0 0 8px;line-height:1.35;
+  }
+  .intro h1 .accent{color:var(--accent)}
+  .intro p{margin:0;max-width:46em;color:var(--muted)}
+  /* ---- ツールバー ---- */
+  .toolbar{
+    position:sticky;top:0;z-index:40;background:var(--bg);
+    border-bottom:1px solid var(--line);padding:12px 0 10px;margin-top:14px;
+  }
+  .tb-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+  .search-box{position:relative;flex:1 1 200px;max-width:340px}
+  .search-box svg{position:absolute;left:10px;top:50%;transform:translateY(-50%);
+    width:16px;height:16px;stroke:var(--muted);pointer-events:none}
+  .search-box input{
+    width:100%;padding:8px 12px 8px 34px;
+    border:1px solid var(--line);border-radius:8px;background:var(--surface);
+  }
+  .search-box input::placeholder{color:var(--muted)}
+  .search-box input:focus{outline:2px solid var(--accent);border-color:transparent}
+  .filter-box select{
+    border:1px solid var(--line);border-radius:8px;background:var(--surface);
+    padding:7px 10px;cursor:pointer;
+  }
+  .cols-ctl{display:flex;align-items:center;gap:6px}
+  .cols-ctl .lbl{font-size:13px;color:var(--muted);font-weight:700}
+  .seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;
+    overflow:hidden;background:var(--surface)}
+  .seg button{
+    border:0;background:transparent;padding:6px 0;width:40px;min-height:2.25rem;
+    font-weight:700;cursor:pointer;color:var(--muted);
+  }
+  .seg button + button{border-left:1px solid var(--line)}
+  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .spacer{flex:1}
+  .count-note{font-size:13px;color:var(--muted);font-weight:700}
+  .btn{
+    display:inline-flex;align-items:center;gap:7px;
+    border:1px solid var(--line);background:var(--surface);color:var(--ink);
+    border-radius:8px;padding:7px 14px;font-weight:700;font-size:14px;cursor:pointer;
+    min-height:2.5rem;text-decoration:none;
+  }
+  .btn:active{transform:translateY(1px)}
+  .btn.primary{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+  .btn[disabled]{opacity:.45;cursor:default;transform:none}
+  .progress-bar{height:6px;background:var(--surface-2);border-radius:999px;
+    overflow:hidden;margin-top:10px}
+  .progress-bar i{display:block;height:100%;width:0;background:var(--accent);
+    border-radius:999px;transition:width .3s ease}
+  /* ---- カード ---- */
+  .grid{
+    display:grid;gap:14px;margin-top:18px;
+    grid-template-columns:repeat(var(--cols),minmax(0,1fr));
+  }
+  .card{
+    background:var(--surface);border:1px solid var(--line);border-radius:12px;
+    overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;
+  }
   .card.done{border-color:var(--accent)}
-  .empty{color:var(--muted);padding:24px 0;text-align:center}
-  /* lightbox & modal */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;
-    align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50}
+  .media{
+    position:relative;display:block;width:100%;aspect-ratio:1/1;
+    background:var(--media-bg);border:0;padding:0;cursor:zoom-in;overflow:hidden;
+  }
+  .media img{width:100%;height:100%;object-fit:cover;display:block}
+  .badge{
+    position:absolute;top:8px;left:8px;background:rgba(18,16,13,.62);color:#fff;
+    font-size:.75rem;font-weight:700;padding:3px 9px;border-radius:999px;
+  }
+  .card-body{padding:10px 12px 14px;display:flex;flex-direction:column;gap:8px;flex:1}
+  .card-top{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+  .no-tag{
+    font-weight:900;font-size:15px;letter-spacing:.03em;
+    border:1.5px solid var(--accent);color:var(--accent);
+    border-radius:6px;padding:1px 8px;line-height:1.5;white-space:nowrap;
+  }
+  .card.done .no-tag{background:var(--accent);color:var(--accent-ink)}
+  .work-title{
+    font-weight:900;letter-spacing:.06em;line-height:1.3;
+    font-size:clamp(24px,2.6vw,32px);margin:2px 0;overflow-wrap:anywhere;
+  }
+  body[data-cols="5"] .work-title,body[data-cols="6"] .work-title{font-size:20px}
+  .work-title .t-lbl{
+    display:block;font-size:11px;font-weight:700;color:var(--muted);
+    letter-spacing:.14em;margin-bottom:1px;
+  }
+  .author-line{
+    display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;
+    border-top:1px solid var(--line);padding-top:9px;margin-top:2px;
+  }
+  .author-line .a-lbl{font-size:12px;font-weight:700;color:var(--muted);
+    letter-spacing:.1em;white-space:nowrap}
+  .author-line .a-name{font-size:18px;font-weight:900;letter-spacing:.02em;
+    line-height:1.4;overflow-wrap:anywhere}
+  body[data-cols="5"] .author-line .a-name,
+  body[data-cols="6"] .author-line .a-name{font-size:15.5px}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field span{font-size:.78rem;font-weight:700;color:var(--muted);letter-spacing:.06em}
+  .field input,.field textarea,.field select{
+    background:var(--surface-2);color:var(--ink);border:1px solid var(--line);
+    border-radius:8px;padding:8px 10px;font-size:.95rem;width:100%;
+  }
+  .field input:focus,.field textarea:focus{outline:2px solid var(--accent);border-color:transparent}
+  .field textarea{resize:vertical;min-height:2.4em}
+  .empty{text-align:center;color:var(--muted);padding:56px 16px;font-weight:700}
+  footer{color:var(--muted);font-size:.8rem;padding:22px 0 0}
+  /* ---- オーバーレイ（拡大表示・書き出し） ---- */
+  .overlay{
+    position:fixed;inset:0;z-index:80;background:rgba(18,16,13,.62);
+    display:none;align-items:flex-start;justify-content:center;
+    overflow-y:auto;padding:20px 12px;
+  }
   .overlay.open{display:flex}
-  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
-    max-width:min(94vw,620px);width:100%;padding:14px}
-  .panel img.view{width:100%;border-radius:8px;display:block;background:#000}
-  .panel video.view{width:100%;border-radius:8px;display:block;background:#000}
-  .panel .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
-  .close-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);
-    border-radius:8px;padding:6px 12px;cursor:pointer}
-  .panel .work-title{margin-top:10px}
-  .panel .field{margin-top:10px}
-  #exp-preview{max-width:100%;margin-top:12px;display:none;border:1px solid var(--border);border-radius:8px}
-  #exp-download{display:none;margin-top:10px}
-  .note{font-size:.88rem;color:var(--muted);margin-top:8px}
-  footer{max-width:1200px;margin:0 auto;padding:0 16px 28px;color:var(--muted);font-size:.8rem}
-  @media (max-width:560px){ h1{font-size:1.3rem} .work-title{font-size:1.1rem} }
+  .sheet{
+    background:var(--surface);border-radius:14px;width:100%;max-width:680px;
+    padding:20px;box-shadow:var(--shadow);margin:auto 0;
+  }
+  .sheet h2{margin:0 0 4px;font-size:19px;font-weight:900}
+  .sheet .close-x{
+    float:right;border:0;background:var(--surface-2);border-radius:8px;
+    width:40px;height:40px;font-size:18px;cursor:pointer;line-height:1;color:var(--ink);
+  }
+  .lb-media{border-radius:10px;overflow:hidden;background:var(--media-bg);
+    aspect-ratio:1/1;position:relative;margin-bottom:6px}
+  .lb-media img,.lb-media video{width:100%;height:100%;object-fit:contain;display:block}
+  .lb-title-big{
+    font-weight:900;font-size:clamp(30px,6vw,42px);letter-spacing:.06em;
+    line-height:1.3;margin:8px 0 10px;overflow-wrap:anywhere;
+  }
+  .lb-title-big .t-lbl{
+    display:block;font-size:11px;font-weight:700;color:var(--muted);letter-spacing:.14em;
+  }
+  .lb-author{
+    display:flex;align-items:baseline;gap:10px;flex-wrap:wrap;
+    border-top:1px solid var(--line);padding-top:12px;margin-top:4px;
+  }
+  .lb-author .a-lbl{font-size:12.5px;font-weight:700;color:var(--muted);letter-spacing:.1em}
+  .lb-author .a-name{font-size:24px;font-weight:900;line-height:1.4;overflow-wrap:anywhere}
+  .sheet .field{margin-top:12px}
+  .note{font-size:.88rem;color:var(--muted);margin-top:10px}
+  #exp-preview{max-width:100%;margin-top:12px;display:none;
+    border:1px solid var(--line);border-radius:8px}
+  #exp-download{display:none;margin-top:12px}
+  @media (max-width:640px){
+    .wrap{padding:0 10px 56px}
+    .grid{gap:10px}
+    .card-body{padding:8px 9px 11px}
+    .btn{padding:7px 11px;font-size:13.5px}
+  }
+  @media (prefers-reduced-motion: reduce){
+    *{transition:none !important}
+  }
 </style>
 </head>
 <body>
-<header>
-  <h1 id="site-title"></h1>
-  <p id="site-desc"></p>
-</header>
+<div class="wrap">
+  <header class="intro">
+    <h1 id="site-title"></h1>
+    <p id="site-desc"></p>
+  </header>
 
-<div class="controls">
-  <label>検索 <input type="search" id="q" placeholder="題字で検索"></label>
-  <label id="filter-wrap">表示
-    <select id="filter">
-      <option value="all">すべて</option>
-      <option value="done">予想済み</option>
-      <option value="todo">未入力</option>
-    </select>
-  </label>
-  <label>列数
-    <select id="cols">
-      <option value="2">2列</option>
-      <option value="3" selected>3列</option>
-      <option value="4">4列</option>
-      <option value="5">5列</option>
-      <option value="6">6列</option>
-    </select>
-  </label>
-  <span id="progress"></span>
-  <button type="button" class="primary" id="export-btn">予想を画像で書き出す</button>
+  <div class="toolbar">
+    <div class="tb-row">
+      <div class="search-box">
+        <svg viewBox="0 0 24 24" fill="none" stroke-width="2" aria-hidden="true">
+          <circle cx="11" cy="11" r="7"/><path d="M20 20l-3.8-3.8"/>
+        </svg>
+        <input type="search" id="q" placeholder="題字で検索" aria-label="検索">
+      </div>
+      <label class="filter-box" id="filter-wrap">
+        <select id="filter" aria-label="表示">
+          <option value="all">すべて</option>
+          <option value="done">予想済み</option>
+          <option value="todo">未入力</option>
+        </select>
+      </label>
+      <div class="cols-ctl">
+        <span class="lbl">列数</span>
+        <div class="seg" id="cols-seg" role="group" aria-label="列数">
+          <button type="button" data-c="2">2</button>
+          <button type="button" data-c="3">3</button>
+          <button type="button" data-c="4">4</button>
+          <button type="button" data-c="5">5</button>
+          <button type="button" data-c="6">6</button>
+        </div>
+      </div>
+      <div class="spacer"></div>
+      <span class="count-note" id="progress"></span>
+      <button type="button" class="btn primary" id="export-btn">予想を画像で書き出す</button>
+    </div>
+    <div class="progress-bar" id="progress-bar-wrap"><i id="progress-bar"></i></div>
+  </div>
+
+  <main>
+    <div class="grid" id="grid"></div>
+    <p class="empty" id="empty" hidden>該当する作品がありません。</p>
+  </main>
+  <footer>入力した予想は、この端末のブラウザにだけ保存されます。</footer>
 </div>
-
-<main><div id="grid"></div><p class="empty" id="empty" hidden>該当する作品がありません。</p></main>
-<footer>入力した予想は、この端末のブラウザにだけ保存されます。</footer>
 
 <!-- 拡大表示 -->
 <div class="overlay" id="lightbox" role="dialog" aria-modal="true">
-  <div class="panel">
-    <div class="row"><span class="no" id="lb-no"></span>
-      <button type="button" class="close-btn" id="lb-close">閉じる</button></div>
-    <div id="lb-media"></div>
-    <div class="work-title" id="lb-title"></div>
-    <div class="author" id="lb-author"></div>
+  <div class="sheet">
+    <button type="button" class="close-x" id="lb-close" aria-label="閉じる">×</button>
+    <div class="lb-media" id="lb-media"></div>
+    <span class="no-tag" id="lb-no"></span>
+    <div class="lb-title-big"><span class="t-lbl">題字</span><span id="lb-title"></span></div>
+    <div class="lb-author" id="lb-author">
+      <span class="a-lbl">作者</span><span class="a-name" id="lb-author-name"></span>
+    </div>
     <div id="lb-fields">
       <div class="field"><span>作者の予想</span><input type="text" id="lb-guess" placeholder="作者名の予想"></div>
       <div class="field"><span>メモ</span><textarea id="lb-memo" placeholder="気づいたことなど"></textarea></div>
@@ -115,9 +260,9 @@
 
 <!-- 書き出しモーダル -->
 <div class="overlay" id="export-modal" role="dialog" aria-modal="true">
-  <div class="panel">
-    <div class="row"><strong>予想を画像で書き出す</strong>
-      <button type="button" class="close-btn" id="exp-close">閉じる</button></div>
+  <div class="sheet">
+    <button type="button" class="close-x" id="exp-close" aria-label="閉じる">×</button>
+    <h2>予想を画像で書き出す</h2>
     <div class="field"><span>予想者の名前（画像に入ります）</span>
       <input type="text" id="exp-name" placeholder="すべあな"></div>
     <div class="field"><span>範囲</span>
@@ -126,10 +271,9 @@
         <option value="guessed">予想を書いたものだけ</option>
       </select></div>
     <p class="note" id="exp-note"></p>
-    <button type="button" class="primary" id="exp-generate"
-      style="background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer;color:#17181c">画像を生成する</button>
+    <button type="button" class="btn primary" id="exp-generate">画像を生成する</button>
     <img id="exp-preview" alt="書き出し画像のプレビュー">
-    <div><a id="exp-download" href="#" download="imina-moji-guesses.png">PNGをダウンロード</a></div>
+    <div><a id="exp-download" class="btn" href="#" download="guesses.png">PNGをダウンロード</a></div>
   </div>
 </div>
 
@@ -175,17 +319,33 @@ function setGuess(no, key, value) {
 // ---- 見出し ----
 if (PHASE === "answer") {
   document.title = EVENT_NAME + " 答え合わせ";
-  $("site-title").textContent = EVENT_NAME + " 答え合わせ";
+  $("site-title").innerHTML = esc(EVENT_NAME) + ' <span class="accent">答え合わせ</span>';
   $("site-desc").textContent = "予想期間が終わったので、各作品の作成者を公開します。画像の下に題字と作成者名を表示しています。";
   $("q").placeholder = "題字・作者名で検索";
   $("filter-wrap").style.display = "none";
   $("export-btn").style.display = "none";
+  $("progress-bar-wrap").style.display = "none";
   document.querySelector("footer").style.display = "none";
 } else {
   document.title = EVENT_NAME + " 予想リスト";
-  $("site-title").textContent = EVENT_NAME + " 予想リスト";
+  $("site-title").innerHTML = esc(EVENT_NAME) + ' <span class="accent">予想リスト</span>';
   $("site-desc").textContent = "作品は作者名を伏せた状態で、題字とセットで公開されています。各作品の作者を予想して入力してください。入力はこの端末のブラウザに自動で保存されます。";
 }
+
+// ---- 列数（セグメントボタン） ----
+let curCols = 3;
+function setCols(n) {
+  curCols = n;
+  document.body.dataset.cols = String(n);
+  document.querySelectorAll("#cols-seg button").forEach((b) => {
+    b.setAttribute("aria-pressed", String(Number(b.dataset.c) === n));
+  });
+  render();
+}
+$("cols-seg").addEventListener("click", (ev) => {
+  const b = ev.target.closest("button[data-c]");
+  if (b) setCols(Number(b.dataset.c));
+});
 
 // ---- 一覧の描画 ----
 function thumbSrc(e) { return e.thumb || e.media; }
@@ -208,11 +368,12 @@ function updateProgress() {
   if (PHASE !== "guess") { $("progress").textContent = ""; return; }
   const done = ENTRIES.filter((e) => guessOf(e.no).guess.trim() !== "").length;
   $("progress").textContent = "予想済み " + done + " / " + ENTRIES.length + " 件";
+  $("progress-bar").style.width = ENTRIES.length ? (done / ENTRIES.length * 100) + "%" : "0%";
 }
 function render() {
   const grid = $("grid");
-  grid.style.setProperty("--cols", $("cols").value);
-  document.documentElement.style.setProperty("--cols", $("cols").value);
+  grid.style.setProperty("--cols", curCols);
+  document.documentElement.style.setProperty("--cols", curCols);
   grid.innerHTML = "";
   let shown = 0;
   for (const e of ENTRIES) {
@@ -221,12 +382,13 @@ function render() {
     const card = document.createElement("article");
     card.className = "card" + (PHASE === "guess" && guessOf(e.no).guess.trim() !== "" ? " done" : "");
     const badge = (e.type === "video") ? '<span class="badge">▶ 動画</span>' : "";
-    let body = '<div class="thumb" data-open="' + e.no + '"><img loading="lazy" src="' +
+    let body = '<div class="media" data-open="' + e.no + '"><img loading="lazy" src="' +
       esc(thumbSrc(e)) + '" alt="' + esc(e.title) + '">' + badge + "</div>" +
-      '<div class="body"><span class="no">No.' + pad(e.no) + '</span>' +
-      '<div class="work-title">' + esc(e.title) + "</div>";
+      '<div class="card-body"><div class="card-top"><span class="no-tag">No.' + pad(e.no) + "</span></div>" +
+      '<div class="work-title"><span class="t-lbl">題字</span>' + esc(e.title) + "</div>";
     if (PHASE === "answer") {
-      body += '<div class="author">作者：' + esc(e.author || "") + "</div>";
+      body += '<div class="author-line"><span class="a-lbl">作者</span>' +
+        '<span class="a-name">' + esc(e.author || "") + "</span></div>";
     } else {
       const g = guessOf(e.no);
       body += '<div class="field"><span>作者の予想</span>' +
@@ -257,7 +419,6 @@ $("grid").addEventListener("click", (ev) => {
 });
 $("q").addEventListener("input", render);
 $("filter").addEventListener("change", render);
-$("cols").addEventListener("change", render);
 
 // ---- 拡大表示 ----
 let lbNo = null;
@@ -269,12 +430,12 @@ function openLightbox(no) {
   $("lb-title").textContent = e.title;
   const media = $("lb-media");
   if (e.type === "video") {
-    media.innerHTML = '<video class="view" controls playsinline src="' + esc(e.media) + '"></video>';
+    media.innerHTML = '<video controls playsinline src="' + esc(e.media) + '"></video>';
   } else {
-    media.innerHTML = '<img class="view" src="' + esc(e.media) + '" alt="' + esc(e.title) + '">';
+    media.innerHTML = '<img src="' + esc(e.media) + '" alt="' + esc(e.title) + '">';
   }
   if (PHASE === "answer") {
-    $("lb-author").textContent = "作者：" + (e.author || "");
+    $("lb-author-name").textContent = e.author || "";
     $("lb-author").style.display = "";
     $("lb-fields").style.display = "none";
   } else {
@@ -340,6 +501,7 @@ function roundRect(ctx, x, y, w, h, r) {
 async function generateExport() {
   const list = exportTargets();
   if (list.length === 0) return;
+  try { await document.fonts.ready; } catch (e) {}
   const { cols } = exportLayout(list.length);
   const name = $("exp-name").value.trim();
   store.name = name; saveStore();
@@ -351,20 +513,22 @@ async function generateExport() {
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#101216"; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#e8eaf0";
-  ctx.font = "700 44px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+  ctx.fillStyle = "#f4f3ef"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#1d1a16";
+  ctx.font = "900 44px 'GenZenGothicKai','Noto Sans JP',sans-serif";
   ctx.textBaseline = "top";
   ctx.fillText(EVENT_NAME + " 予想リスト", PAD, 30);
-  ctx.font = "28px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
-  ctx.fillStyle = "#9aa1af";
+  ctx.font = "28px 'GenZenGothicKai','Noto Sans JP',sans-serif";
+  ctx.fillStyle = "#6e675c";
   ctx.fillText(name ? "予想者：" + name : "予想者：", PAD, 84);
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     const cx = PAD + (i % cols) * (CELL_W + GAP);
     const cy = HEAD + Math.floor(i / cols) * (CELL_H + GAP);
-    ctx.fillStyle = "#1a1d24";
+    ctx.fillStyle = "#ffffff";
     roundRect(ctx, cx, cy, CELL_W, CELL_H, 12); ctx.fill();
+    ctx.strokeStyle = "#ddd8cc"; ctx.lineWidth = 2;
+    roundRect(ctx, cx, cy, CELL_W, CELL_H, 12); ctx.stroke();
     try {
       const img = await loadImg(thumbSrc(e));
       const scale = Math.max(CELL_W / img.width, IMG_H / img.height);
@@ -374,21 +538,21 @@ async function generateExport() {
       ctx.drawImage(img, cx + (CELL_W - dw) / 2, cy + (IMG_H - dh) / 2, dw, dh);
       ctx.restore();
       if (e.type === "video") {
-        ctx.fillStyle = "rgba(0,0,0,.55)";
+        ctx.fillStyle = "rgba(18,16,13,.62)";
         roundRect(ctx, cx + 10, cy + 10, 92, 34, 17); ctx.fill();
-        ctx.fillStyle = "#fff"; ctx.font = "22px sans-serif";
+        ctx.fillStyle = "#fff"; ctx.font = "700 22px 'GenZenGothicKai',sans-serif";
         ctx.fillText("▶ 動画", cx + 22, cy + 16);
       }
     } catch (err) {
-      ctx.fillStyle = "#2c3038"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
+      ctx.fillStyle = "#e9e6dd"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
     }
-    ctx.fillStyle = "#9aa1af"; ctx.font = "22px sans-serif";
+    ctx.fillStyle = "#a62b12"; ctx.font = "900 24px 'GenZenGothicKai',sans-serif";
     ctx.fillText("No." + pad(e.no), cx + 14, cy + IMG_H + 10);
-    ctx.fillStyle = "#e8eaf0"; ctx.font = "700 34px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+    ctx.fillStyle = "#1d1a16"; ctx.font = "900 34px 'GenZenGothicKai','Noto Sans JP',sans-serif";
     ctx.fillText(e.title, cx + 14, cy + IMG_H + 40);
     const g = guessOf(e.no).guess.trim();
-    ctx.font = "26px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
-    ctx.fillStyle = g ? "#c9a86a" : "#9aa1af";
+    ctx.font = "26px 'GenZenGothicKai','Noto Sans JP',sans-serif";
+    ctx.fillStyle = g ? "#a62b12" : "#6e675c";
     ctx.fillText("予想：" + (g || "（未入力）"), cx + 14, cy + IMG_H + 82);
   }
   canvas.toBlob((blob) => {
@@ -396,7 +560,7 @@ async function generateExport() {
     const prev = $("exp-preview");
     prev.src = url; prev.style.display = "block";
     const dl = $("exp-download");
-    dl.href = url; dl.style.display = "inline-block";
+    dl.href = url; dl.style.display = "inline-flex";
   }, "image/png");
 }
 if (PHASE === "guess") {
@@ -412,6 +576,7 @@ if (PHASE === "guess") {
   $("exp-generate").addEventListener("click", generateExport);
 }
 
+setCols(3);
 render();
 </script>
 </body>
