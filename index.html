@@ -5,16 +5,35 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>イベント一覧 | kyoikumoji-tenr</title>
 <style>
-  body{margin:0;background:#101216;color:#e8eaf0;
-    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif}
+  @font-face{
+    font-family:"GenZenGothicKai";
+    src:url("assets/fonts/GenZenGothicKai.ttf") format("truetype");
+    font-weight:400 900;
+    font-display:swap;
+  }
+  :root{
+    --bg:#f4f3ef; --surface:#ffffff; --ink:#1d1a16; --muted:#6e675c;
+    --line:#ddd8cc; --accent:#a62b12;
+    --shadow:0 1px 2px rgba(29,26,22,.06), 0 8px 24px rgba(29,26,22,.06);
+  }
+  @media (prefers-color-scheme: dark){
+    :root{
+      --bg:#16140f; --surface:#201d18; --ink:#f1ede3; --muted:#a79d8d;
+      --line:#3a362d; --accent:#e85a33;
+      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
+    }
+  }
+  body{margin:0;background:var(--bg);color:var(--ink);
+    font-family:"GenZenGothicKai","Noto Sans JP","Hiragino Kaku Gothic ProN",sans-serif}
   main{max-width:800px;margin:0 auto;padding:32px 16px}
-  h1{font-size:1.4rem;margin:0 0 20px}
+  h1{font-size:1.5rem;font-weight:900;margin:0 0 20px;letter-spacing:.03em}
   ul{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:10px}
-  a{display:block;background:#1a1d24;border:1px solid #2c3038;border-radius:12px;
-    padding:14px 16px;color:#e8eaf0;text-decoration:none}
-  a:hover{border-color:#c9a86a}
-  .name{font-weight:700}
-  .path{color:#9aa1af;font-size:.85rem;margin-top:4px}
+  a{display:block;background:var(--surface);border:1px solid var(--line);
+    border-radius:12px;box-shadow:var(--shadow);
+    padding:14px 16px;color:var(--ink);text-decoration:none}
+  a:hover{border-color:var(--accent)}
+  .name{font-weight:900}
+  .path{color:var(--muted);font-size:.85rem;margin-top:4px}
 </style>
 </head>
 <body>
