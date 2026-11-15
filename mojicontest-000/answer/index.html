@@ -12,20 +12,12 @@
     font-display:swap;
   }
   :root{
-    --bg:#f4f3ef; --surface:#ffffff; --surface-2:#eceae3;
-    --ink:#1d1a16; --muted:#6e675c; --line:#ddd8cc;
-    --accent:#a62b12; --accent-soft:#fbe9e2; --accent-ink:#ffffff;
-    --media-bg:#e9e6dd;
-    --shadow:0 1px 2px rgba(29,26,22,.06), 0 8px 24px rgba(29,26,22,.06);
+    --bg:#12100d; --surface:#1c1a16; --surface-2:#2a2721;
+    --ink:#f5f2ea; --muted:#a79d8d; --line:#35302a;
+    --accent:#e85a33; --accent-soft:#3d2118; --accent-ink:#ffffff;
+    --media-bg:#26231e;
+    --shadow:0 1px 2px rgba(0,0,0,.5), 0 10px 28px rgba(0,0,0,.45);
     --cols:3;
-  }
-  @media (prefers-color-scheme: dark){
-    :root{
-      --bg:#16140f; --surface:#201d18; --surface-2:#2a2721;
-      --ink:#f1ede3; --muted:#a79d8d; --line:#3a362d;
-      --accent:#e85a33; --accent-soft:#3d2118; --media-bg:#292620;
-      --shadow:0 1px 2px rgba(0,0,0,.4), 0 8px 24px rgba(0,0,0,.35);
-    }
   }
   *{box-sizing:border-box}
   [hidden]{display:none !important}
@@ -40,7 +32,7 @@
   a{color:var(--accent)}
   .wrap{max-width:1440px;margin:0 auto;padding:0 16px 64px}
   /* ---- 見出し ---- */
-  .intro{padding:30px 0 6px}
+  .intro{padding:30px 0 6px;background:radial-gradient(640px 230px at 12% 0, rgba(232,90,51,.16), rgba(232,90,51,0) 70%)}
   .intro h1{
     font-weight:900;font-size:clamp(26px,4.5vw,38px);
     letter-spacing:.04em;margin:0 0 8px;line-height:1.35;
@@ -75,7 +67,7 @@
     font-weight:700;cursor:pointer;color:var(--muted);
   }
   .seg button + button{border-left:1px solid var(--line)}
-  .seg button[aria-pressed="true"]{background:var(--ink);color:var(--bg)}
+  .seg button[aria-pressed="true"]{background:var(--accent);color:var(--accent-ink)}
   .spacer{flex:1}
   .count-note{font-size:13px;color:var(--muted);font-weight:700}
   .btn{
@@ -101,6 +93,8 @@
     overflow:hidden;box-shadow:var(--shadow);display:flex;flex-direction:column;
   }
   .card.done{border-color:var(--accent)}
+  .card{transition:transform .16s ease, box-shadow .16s ease}
+  .card:hover{transform:translateY(-2px);box-shadow:0 2px 4px rgba(0,0,0,.5), 0 16px 36px rgba(0,0,0,.55)}
   .media{
     position:relative;display:block;width:100%;aspect-ratio:1/1;
     background:var(--media-bg);border:0;padding:0;cursor:zoom-in;overflow:hidden;
@@ -149,7 +143,7 @@
   footer{color:var(--muted);font-size:.8rem;padding:22px 0 0}
   /* ---- オーバーレイ（拡大表示・書き出し） ---- */
   .overlay{
-    position:fixed;inset:0;z-index:80;background:rgba(18,16,13,.62);
+    position:fixed;inset:0;z-index:80;background:rgba(5,4,3,.78);
     display:none;align-items:flex-start;justify-content:center;
     overflow-y:auto;padding:20px 12px;
   }
@@ -513,21 +507,21 @@ async function generateExport() {
   const canvas = document.createElement("canvas");
   canvas.width = W; canvas.height = H;
   const ctx = canvas.getContext("2d");
-  ctx.fillStyle = "#f4f3ef"; ctx.fillRect(0, 0, W, H);
-  ctx.fillStyle = "#1d1a16";
+  ctx.fillStyle = "#12100d"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#f5f2ea";
   ctx.font = "900 44px 'GenZenGothicKai','Noto Sans JP',sans-serif";
   ctx.textBaseline = "top";
   ctx.fillText(EVENT_NAME + " 予想リスト", PAD, 30);
   ctx.font = "28px 'GenZenGothicKai','Noto Sans JP',sans-serif";
-  ctx.fillStyle = "#6e675c";
+  ctx.fillStyle = "#a79d8d";
   ctx.fillText(name ? "予想者：" + name : "予想者：", PAD, 84);
   for (let i = 0; i < list.length; i++) {
     const e = list[i];
     const cx = PAD + (i % cols) * (CELL_W + GAP);
     const cy = HEAD + Math.floor(i / cols) * (CELL_H + GAP);
-    ctx.fillStyle = "#ffffff";
+    ctx.fillStyle = "#1c1a16";
     roundRect(ctx, cx, cy, CELL_W, CELL_H, 12); ctx.fill();
-    ctx.strokeStyle = "#ddd8cc"; ctx.lineWidth = 2;
+    ctx.strokeStyle = "#35302a"; ctx.lineWidth = 2;
     roundRect(ctx, cx, cy, CELL_W, CELL_H, 12); ctx.stroke();
     try {
       const img = await loadImg(thumbSrc(e));
@@ -544,15 +538,15 @@ async function generateExport() {
         ctx.fillText("▶ 動画", cx + 22, cy + 16);
       }
     } catch (err) {
-      ctx.fillStyle = "#e9e6dd"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
+      ctx.fillStyle = "#26231e"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
     }
-    ctx.fillStyle = "#a62b12"; ctx.font = "900 24px 'GenZenGothicKai',sans-serif";
+    ctx.fillStyle = "#e85a33"; ctx.font = "900 24px 'GenZenGothicKai',sans-serif";
     ctx.fillText("No." + pad(e.no), cx + 14, cy + IMG_H + 10);
-    ctx.fillStyle = "#1d1a16"; ctx.font = "900 34px 'GenZenGothicKai','Noto Sans JP',sans-serif";
+    ctx.fillStyle = "#f5f2ea"; ctx.font = "900 34px 'GenZenGothicKai','Noto Sans JP',sans-serif";
     ctx.fillText(e.title, cx + 14, cy + IMG_H + 40);
     const g = guessOf(e.no).guess.trim();
     ctx.font = "26px 'GenZenGothicKai','Noto Sans JP',sans-serif";
-    ctx.fillStyle = g ? "#a62b12" : "#6e675c";
+    ctx.fillStyle = g ? "#e85a33" : "#a79d8d";
     ctx.fillText("予想：" + (g || "（未入力）"), cx + 14, cy + IMG_H + 82);
   }
   canvas.toBlob((blob) => {
