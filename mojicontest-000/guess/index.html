@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>諱文字コンテスト</title>
+<style>
+  :root{
+    --bg:#101216; --surface:#1a1d24; --surface2:#22262f; --text:#e8eaf0;
+    --muted:#9aa1af; --border:#2c3038; --accent:#c9a86a; --focus:#6ea8fe;
+    --cols:3;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;background:var(--bg);color:var(--text);
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Noto Sans JP",sans-serif;
+    -webkit-text-size-adjust:100%}
+  header{max-width:1200px;margin:0 auto;padding:28px 16px 8px}
+  h1{font-size:1.6rem;margin:0 0 8px;letter-spacing:.02em}
+  header p{margin:0;color:var(--muted);line-height:1.7;font-size:.95rem}
+  .controls{max-width:1200px;margin:0 auto;padding:14px 16px;display:flex;
+    flex-wrap:wrap;gap:10px;align-items:center}
+  .controls label{font-size:.85rem;color:var(--muted);display:flex;gap:6px;align-items:center}
+  .controls input[type="search"],.controls select,.controls button,
+  .field input,.field textarea{
+    background:var(--surface2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:8px 10px;font-size:.95rem;font-family:inherit}
+  .controls input[type="search"]{min-width:180px}
+  .controls button{cursor:pointer}
+  .controls button.primary{background:var(--accent);border-color:var(--accent);
+    color:#17181c;font-weight:700}
+  #progress{font-size:.9rem;color:var(--muted)}
+  main{max-width:1200px;margin:0 auto;padding:4px 16px 40px}
+  #grid{display:grid;grid-template-columns:repeat(var(--cols),1fr);gap:14px}
+  .card{background:var(--surface);border:1px solid var(--border);
+    border-radius:12px;overflow:hidden;display:flex;flex-direction:column}
+  .card .thumb{position:relative;cursor:zoom-in;background:#000}
+  .card .thumb img{width:100%;aspect-ratio:1/1;object-fit:cover;display:block}
+  .badge{position:absolute;top:8px;left:8px;background:rgba(0,0,0,.55);
+    color:#fff;font-size:.75rem;padding:3px 8px;border-radius:999px}
+  .card .body{padding:10px 12px 12px;display:flex;flex-direction:column;gap:8px}
+  .no{font-size:.8rem;color:var(--muted)}
+  .work-title{font-size:1.35rem;font-weight:700;line-height:1.3}
+  .author{font-size:1rem;font-weight:600;color:var(--accent)}
+  .field{display:flex;flex-direction:column;gap:4px}
+  .field span{font-size:.78rem;color:var(--muted)}
+  .field input,.field textarea{width:100%}
+  .field textarea{resize:vertical;min-height:2.4em}
+  .card.done{border-color:var(--accent)}
+  .empty{color:var(--muted);padding:24px 0;text-align:center}
+  /* lightbox & modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.78);display:none;
+    align-items:flex-start;justify-content:center;overflow:auto;padding:24px 12px;z-index:50}
+  .overlay.open{display:flex}
+  .panel{background:var(--surface);border:1px solid var(--border);border-radius:14px;
+    max-width:min(94vw,620px);width:100%;padding:14px}
+  .panel img.view{width:100%;border-radius:8px;display:block;background:#000}
+  .panel video.view{width:100%;border-radius:8px;display:block;background:#000}
+  .panel .row{display:flex;justify-content:space-between;align-items:center;gap:10px}
+  .close-btn{background:var(--surface2);color:var(--text);border:1px solid var(--border);
+    border-radius:8px;padding:6px 12px;cursor:pointer}
+  .panel .work-title{margin-top:10px}
+  .panel .field{margin-top:10px}
+  #exp-preview{max-width:100%;margin-top:12px;display:none;border:1px solid var(--border);border-radius:8px}
+  #exp-download{display:none;margin-top:10px}
+  .note{font-size:.88rem;color:var(--muted);margin-top:8px}
+  footer{max-width:1200px;margin:0 auto;padding:0 16px 28px;color:var(--muted);font-size:.8rem}
+  @media (max-width:560px){ h1{font-size:1.3rem} .work-title{font-size:1.1rem} }
+</style>
+</head>
+<body>
+<header>
+  <h1 id="site-title"></h1>
+  <p id="site-desc"></p>
+</header>
+
+<div class="controls">
+  <label>検索 <input type="search" id="q" placeholder="題字で検索"></label>
+  <label id="filter-wrap">表示
+    <select id="filter">
+      <option value="all">すべて</option>
+      <option value="done">予想済み</option>
+      <option value="todo">未入力</option>
+    </select>
+  </label>
+  <label>列数
+    <select id="cols">
+      <option value="2">2列</option>
+      <option value="3" selected>3列</option>
+      <option value="4">4列</option>
+      <option value="5">5列</option>
+      <option value="6">6列</option>
+    </select>
+  </label>
+  <span id="progress"></span>
+  <button type="button" class="primary" id="export-btn">予想を画像で書き出す</button>
+</div>
+
+<main><div id="grid"></div><p class="empty" id="empty" hidden>該当する作品がありません。</p></main>
+<footer>入力した予想は、この端末のブラウザにだけ保存されます。</footer>
+
+<!-- 拡大表示 -->
+<div class="overlay" id="lightbox" role="dialog" aria-modal="true">
+  <div class="panel">
+    <div class="row"><span class="no" id="lb-no"></span>
+      <button type="button" class="close-btn" id="lb-close">閉じる</button></div>
+    <div id="lb-media"></div>
+    <div class="work-title" id="lb-title"></div>
+    <div class="author" id="lb-author"></div>
+    <div id="lb-fields">
+      <div class="field"><span>作者の予想</span><input type="text" id="lb-guess" placeholder="作者名の予想"></div>
+      <div class="field"><span>メモ</span><textarea id="lb-memo" placeholder="気づいたことなど"></textarea></div>
+    </div>
+  </div>
+</div>
+
+<!-- 書き出しモーダル -->
+<div class="overlay" id="export-modal" role="dialog" aria-modal="true">
+  <div class="panel">
+    <div class="row"><strong>予想を画像で書き出す</strong>
+      <button type="button" class="close-btn" id="exp-close">閉じる</button></div>
+    <div class="field"><span>予想者の名前（画像に入ります）</span>
+      <input type="text" id="exp-name" placeholder="すべあな"></div>
+    <div class="field"><span>範囲</span>
+      <select id="exp-range">
+        <option value="all">全件</option>
+        <option value="guessed">予想を書いたものだけ</option>
+      </select></div>
+    <p class="note" id="exp-note"></p>
+    <button type="button" class="primary" id="exp-generate"
+      style="background:var(--accent);border:1px solid var(--accent);border-radius:8px;padding:9px 14px;font-weight:700;cursor:pointer;color:#17181c">画像を生成する</button>
+    <img id="exp-preview" alt="書き出し画像のプレビュー">
+    <div><a id="exp-download" href="#" download="imina-moji-guesses.png">PNGをダウンロード</a></div>
+  </div>
+</div>
+
+<script src="../config.js"></script>
+<script src="data.js"></script>
+<script>
+"use strict";
+const DATA = window.SITE_DATA || { phase: "guess", entries: [] };
+const PHASE = DATA.phase === "answer" ? "answer" : "guess";
+const ENTRIES = (DATA.entries || []).slice().sort((a, b) => a.no - b.no);
+const CONFIG = window.SITE_CONFIG || {};
+const EVENT_NAME = CONFIG.eventName || "諱文字コンテスト";
+const LS_KEY = "moji_guesses" + location.pathname.replace(/[^a-zA-Z0-9]+/g, "_");
+
+const $ = (id) => document.getElementById(id);
+const pad = (n) => String(n).padStart(3, "0");
+const esc = (s) => String(s == null ? "" : s)
+  .replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;")
+  .replace(/"/g, "&quot;").replace(/'/g, "&#39;");
+
+// ---- 予想の保存（この端末のブラウザ内だけ） ----
+let store = { byNo: {}, name: "" };
+if (PHASE === "guess") {
+  try {
+    const raw = localStorage.getItem(LS_KEY);
+    if (raw) store = Object.assign(store, JSON.parse(raw));
+  } catch (e) { /* 保存が読めなくても表示は続ける */ }
+}
+function saveStore() {
+  try { localStorage.setItem(LS_KEY, JSON.stringify(store)); } catch (e) {}
+}
+function guessOf(no) {
+  const g = store.byNo[no] || {};
+  return { guess: g.guess || "", memo: g.memo || "" };
+}
+function setGuess(no, key, value) {
+  const g = guessOf(no);
+  g[key] = value;
+  store.byNo[no] = g;
+  saveStore();
+}
+
+// ---- 見出し ----
+if (PHASE === "answer") {
+  document.title = EVENT_NAME + " 答え合わせ";
+  $("site-title").textContent = EVENT_NAME + " 答え合わせ";
+  $("site-desc").textContent = "予想期間が終わったので、各作品の作成者を公開します。画像の下に題字と作成者名を表示しています。";
+  $("q").placeholder = "題字・作者名で検索";
+  $("filter-wrap").style.display = "none";
+  $("export-btn").style.display = "none";
+  document.querySelector("footer").style.display = "none";
+} else {
+  document.title = EVENT_NAME + " 予想リスト";
+  $("site-title").textContent = EVENT_NAME + " 予想リスト";
+  $("site-desc").textContent = "作品は作者名を伏せた状態で、題字とセットで公開されています。各作品の作者を予想して入力してください。入力はこの端末のブラウザに自動で保存されます。";
+}
+
+// ---- 一覧の描画 ----
+function thumbSrc(e) { return e.thumb || e.media; }
+function matches(e) {
+  const q = $("q").value.trim();
+  if (q) {
+    const hay = PHASE === "answer" ? (e.title + " " + (e.author || "") + " " + pad(e.no))
+                                   : (e.title + " " + pad(e.no));
+    if (!hay.includes(q)) return false;
+  }
+  if (PHASE === "guess") {
+    const f = $("filter").value;
+    const has = guessOf(e.no).guess.trim() !== "";
+    if (f === "done" && !has) return false;
+    if (f === "todo" && has) return false;
+  }
+  return true;
+}
+function updateProgress() {
+  if (PHASE !== "guess") { $("progress").textContent = ""; return; }
+  const done = ENTRIES.filter((e) => guessOf(e.no).guess.trim() !== "").length;
+  $("progress").textContent = "予想済み " + done + " / " + ENTRIES.length + " 件";
+}
+function render() {
+  const grid = $("grid");
+  grid.style.setProperty("--cols", $("cols").value);
+  document.documentElement.style.setProperty("--cols", $("cols").value);
+  grid.innerHTML = "";
+  let shown = 0;
+  for (const e of ENTRIES) {
+    if (!matches(e)) continue;
+    shown++;
+    const card = document.createElement("article");
+    card.className = "card" + (PHASE === "guess" && guessOf(e.no).guess.trim() !== "" ? " done" : "");
+    const badge = (e.type === "video") ? '<span class="badge">▶ 動画</span>' : "";
+    let body = '<div class="thumb" data-open="' + e.no + '"><img loading="lazy" src="' +
+      esc(thumbSrc(e)) + '" alt="' + esc(e.title) + '">' + badge + "</div>" +
+      '<div class="body"><span class="no">No.' + pad(e.no) + '</span>' +
+      '<div class="work-title">' + esc(e.title) + "</div>";
+    if (PHASE === "answer") {
+      body += '<div class="author">作者：' + esc(e.author || "") + "</div>";
+    } else {
+      const g = guessOf(e.no);
+      body += '<div class="field"><span>作者の予想</span>' +
+        '<input type="text" data-guess="' + e.no + '" value="' + esc(g.guess) + '" placeholder="作者名の予想"></div>' +
+        '<div class="field"><span>メモ</span>' +
+        '<textarea data-memo="' + e.no + '" placeholder="気づいたことなど">' + esc(g.memo) + "</textarea></div>";
+    }
+    body += "</div>";
+    card.innerHTML = body;
+    grid.appendChild(card);
+  }
+  $("empty").hidden = shown !== 0;
+  updateProgress();
+}
+$("grid").addEventListener("input", (ev) => {
+  const t = ev.target;
+  if (t.dataset.guess) {
+    setGuess(Number(t.dataset.guess), "guess", t.value);
+    const card = t.closest(".card");
+    if (card) card.classList.toggle("done", t.value.trim() !== "");
+    updateProgress();
+  }
+  if (t.dataset.memo) setGuess(Number(t.dataset.memo), "memo", t.value);
+});
+$("grid").addEventListener("click", (ev) => {
+  const th = ev.target.closest("[data-open]");
+  if (th) openLightbox(Number(th.dataset.open));
+});
+$("q").addEventListener("input", render);
+$("filter").addEventListener("change", render);
+$("cols").addEventListener("change", render);
+
+// ---- 拡大表示 ----
+let lbNo = null;
+function openLightbox(no) {
+  const e = ENTRIES.find((x) => x.no === no);
+  if (!e) return;
+  lbNo = no;
+  $("lb-no").textContent = "No." + pad(e.no);
+  $("lb-title").textContent = e.title;
+  const media = $("lb-media");
+  if (e.type === "video") {
+    media.innerHTML = '<video class="view" controls playsinline src="' + esc(e.media) + '"></video>';
+  } else {
+    media.innerHTML = '<img class="view" src="' + esc(e.media) + '" alt="' + esc(e.title) + '">';
+  }
+  if (PHASE === "answer") {
+    $("lb-author").textContent = "作者：" + (e.author || "");
+    $("lb-author").style.display = "";
+    $("lb-fields").style.display = "none";
+  } else {
+    $("lb-author").style.display = "none";
+    $("lb-fields").style.display = "";
+    const g = guessOf(no);
+    $("lb-guess").value = g.guess;
+    $("lb-memo").value = g.memo;
+  }
+  $("lightbox").classList.add("open");
+}
+function closeLightbox() { $("lightbox").classList.remove("open"); lbNo = null; }
+$("lb-close").addEventListener("click", closeLightbox);
+$("lightbox").addEventListener("click", (ev) => { if (ev.target === $("lightbox")) closeLightbox(); });
+$("lb-guess").addEventListener("input", (ev) => { if (lbNo != null) { setGuess(lbNo, "guess", ev.target.value); render(); } });
+$("lb-memo").addEventListener("input", (ev) => { if (lbNo != null) { setGuess(lbNo, "memo", ev.target.value); render(); } });
+
+// ---- PNG書き出し（予想パートのみ） ----
+// レイアウト: 対象件数 N に対し 行数 R = floor(√N)（N が n^2〜(n+1)^2−1 のとき n 行）、
+// 列数 C = ceil(N / R)。ただし C が 10 を超える場合だけ C = 10, R = ceil(N / 10)。
+function exportLayout(n) {
+  if (n <= 0) return { cols: 0, rows: 0 };
+  let rows = Math.floor(Math.sqrt(n));
+  if (rows < 1) rows = 1;
+  let cols = Math.ceil(n / rows);
+  if (cols > 10) { cols = 10; rows = Math.ceil(n / cols); }
+  return { cols, rows };
+}
+function exportTargets() {
+  if ($("exp-range").value === "guessed") {
+    return ENTRIES.filter((e) => guessOf(e.no).guess.trim() !== "");
+  }
+  return ENTRIES.slice();
+}
+function updateExpNote() {
+  const list = exportTargets();
+  const { cols, rows } = exportLayout(list.length);
+  if (list.length === 0) {
+    $("exp-note").textContent = "対象がありません。";
+    $("exp-generate").disabled = true;
+  } else {
+    $("exp-note").textContent = "対象" + list.length + "件 → " + cols + "列 × " + rows + "行で書き出します";
+    $("exp-generate").disabled = false;
+  }
+}
+function loadImg(src) {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    img.onload = () => resolve(img);
+    img.onerror = reject;
+    img.src = src;
+  });
+}
+function roundRect(ctx, x, y, w, h, r) {
+  ctx.beginPath();
+  ctx.moveTo(x + r, y);
+  ctx.arcTo(x + w, y, x + w, y + h, r);
+  ctx.arcTo(x + w, y + h, x, y + h, r);
+  ctx.arcTo(x, y + h, x, y, r);
+  ctx.arcTo(x, y, x + w, y, r);
+  ctx.closePath();
+}
+async function generateExport() {
+  const list = exportTargets();
+  if (list.length === 0) return;
+  const { cols } = exportLayout(list.length);
+  const name = $("exp-name").value.trim();
+  store.name = name; saveStore();
+  const CELL_W = 380, GAP = 16, PAD = 24, HEAD = 118;
+  const IMG_H = CELL_W, TXT_H = 118, CELL_H = IMG_H + TXT_H;
+  const rows = Math.ceil(list.length / cols);
+  const W = PAD * 2 + cols * CELL_W + (cols - 1) * GAP;
+  const H = HEAD + rows * CELL_H + (rows - 1) * GAP + PAD;
+  const canvas = document.createElement("canvas");
+  canvas.width = W; canvas.height = H;
+  const ctx = canvas.getContext("2d");
+  ctx.fillStyle = "#101216"; ctx.fillRect(0, 0, W, H);
+  ctx.fillStyle = "#e8eaf0";
+  ctx.font = "700 44px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+  ctx.textBaseline = "top";
+  ctx.fillText(EVENT_NAME + " 予想リスト", PAD, 30);
+  ctx.font = "28px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+  ctx.fillStyle = "#9aa1af";
+  ctx.fillText(name ? "予想者：" + name : "予想者：", PAD, 84);
+  for (let i = 0; i < list.length; i++) {
+    const e = list[i];
+    const cx = PAD + (i % cols) * (CELL_W + GAP);
+    const cy = HEAD + Math.floor(i / cols) * (CELL_H + GAP);
+    ctx.fillStyle = "#1a1d24";
+    roundRect(ctx, cx, cy, CELL_W, CELL_H, 12); ctx.fill();
+    try {
+      const img = await loadImg(thumbSrc(e));
+      const scale = Math.max(CELL_W / img.width, IMG_H / img.height);
+      const dw = img.width * scale, dh = img.height * scale;
+      ctx.save();
+      roundRect(ctx, cx, cy, CELL_W, IMG_H, 12); ctx.clip();
+      ctx.drawImage(img, cx + (CELL_W - dw) / 2, cy + (IMG_H - dh) / 2, dw, dh);
+      ctx.restore();
+      if (e.type === "video") {
+        ctx.fillStyle = "rgba(0,0,0,.55)";
+        roundRect(ctx, cx + 10, cy + 10, 92, 34, 17); ctx.fill();
+        ctx.fillStyle = "#fff"; ctx.font = "22px sans-serif";
+        ctx.fillText("▶ 動画", cx + 22, cy + 16);
+      }
+    } catch (err) {
+      ctx.fillStyle = "#2c3038"; ctx.fillRect(cx, cy, CELL_W, IMG_H);
+    }
+    ctx.fillStyle = "#9aa1af"; ctx.font = "22px sans-serif";
+    ctx.fillText("No." + pad(e.no), cx + 14, cy + IMG_H + 10);
+    ctx.fillStyle = "#e8eaf0"; ctx.font = "700 34px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+    ctx.fillText(e.title, cx + 14, cy + IMG_H + 40);
+    const g = guessOf(e.no).guess.trim();
+    ctx.font = "26px 'Hiragino Kaku Gothic ProN','Noto Sans JP',sans-serif";
+    ctx.fillStyle = g ? "#c9a86a" : "#9aa1af";
+    ctx.fillText("予想：" + (g || "（未入力）"), cx + 14, cy + IMG_H + 82);
+  }
+  canvas.toBlob((blob) => {
+    const url = URL.createObjectURL(blob);
+    const prev = $("exp-preview");
+    prev.src = url; prev.style.display = "block";
+    const dl = $("exp-download");
+    dl.href = url; dl.style.display = "inline-block";
+  }, "image/png");
+}
+if (PHASE === "guess") {
+  $("exp-name").value = store.name || "";
+  $("export-btn").addEventListener("click", () => {
+    $("exp-name").value = store.name || "";
+    updateExpNote();
+    $("export-modal").classList.add("open");
+  });
+  $("exp-close").addEventListener("click", () => $("export-modal").classList.remove("open"));
+  $("export-modal").addEventListener("click", (ev) => { if (ev.target === $("export-modal")) $("export-modal").classList.remove("open"); });
+  $("exp-range").addEventListener("change", updateExpNote);
+  $("exp-generate").addEventListener("click", generateExport);
+}
+
+render();
+</script>
+</body>
+</html>
